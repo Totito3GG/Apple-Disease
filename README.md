@@ -1,26 +1,52 @@
-# Détecteur de maladies du pommier
+# Détecteur de maladies du pommier 🍎
 
-## Corrections appliquées vs version précédente
+## Résultats obtenus
 
-| Problème | Avant | Après |
-|----------|-------|-------|
-| Taille input | 224×224 (EfficientNet-B0) | **380×380** (EfficientNet-B4 natif) |
-| Nbre de classes | "10 maladies" | **4 classes réelles** PlantVillage |
-| Nbre d'images | "38 000+" | **~5 100** (pommier uniquement) |
-| Quantification | INT8 | **Float-16** (précision préservée) |
-| Fine-tuning | Toutes les couches | **30% des couches** (évite l'oubli catastrophique) |
-| Déséquilibre | Ignoré | **Pondération des classes** (Cedar Rust ×4-6) |
+| Métrique | Valeur |
+|----------|--------|
+| Modèle | EfficientNet-B4 |
+| Classes | **6 maladies** |
+| Images d'entraînement | **20 808** |
+| Val accuracy | **100%** |
+| Taille modèle TFLite | 35.2 MB (Float-16) |
+| Plateforme | Android & iOS — 100% hors-ligne |
 
 ---
 
-## Structure du projet
+## Classes détectées
+
+| Classe (code) | Français | العربية |
+|---------------|----------|---------|
+| `Apple_scab` | Tavelure | جرب التفاح |
+| `Black_rot` | Pourriture noire | العفن الأسود |
+| `Cedar_apple_rust` | Rouille | صدأ التفاح |
+| `Altenaria_Leaf_Spot` | Tache alternaria | تبقع الترناريا |
+| `Powdery_Mildew` | Oïdium | البياض الدقيقي |
+| `Healthy` | Sain | صحي |
+
+---
+
+## Dataset utilisé
+
+**PV-ALE** (PlantVillage Apple Leaves Extended) — version augmentée
+- Source : `akinyemijoseph/apple-leaf-disease-dataset-6-classes-v2` sur Kaggle
+- Dossier utilisé : `AppleLeafDisease/Aug_Set/`
+- ~3 420–3 528 images par classe → dataset parfaitement équilibré
+- Pas besoin de pondération des classes
+
+---
+
+## Architecture technique
 
 ```
 Apple/
+├── .github/
+│   └── workflows/
+│       └── build.yml              ← Build APK automatique via GitHub Actions
 ├── training/
-│   ├── Apple_Disease_Colab.ipynb   ← ouvrir dans Google Colab
-│   ├── train.py                    ← si entraînement local
-│   └── convert_tflite.py           ← conversion Float-16
+│   ├── Apple_Disease_Colab.ipynb  ← Notebook Kaggle (entraînement)
+│   ├── train.py                   ← Script local (optionnel)
+│   └── convert_tflite.py          ← Conversion Float-16
 └── flutter_app/
     ├── lib/
     │   ├── main.dart
@@ -32,71 +58,56 @@ Apple/
     │       ├── classifier.dart
     │       └── disease_data.dart
     └── assets/model/
-        ├── apple_disease_f16.tflite  ← à générer (étape 2)
+        ├── apple_disease_f16.tflite   ← modèle TFLite Float-16 (35.2 MB)
         └── class_names.json
 ```
 
 ---
 
-## Étapes dans l'ordre
+## Choix techniques et pourquoi
 
-### 1. Entraîner sur Google Colab (gratuit, ~1h avec GPU T4)
+| Décision | Choix | Raison |
+|----------|-------|--------|
+| Modèle | EfficientNet-B4 | Meilleur ratio précision/taille pour mobile |
+| Input size | **380×380** | Taille native B4 (B0=224, B1=240, B4=380) |
+| Quantification | **Float-16** | Taille ÷2, perte de précision < 0.5% (vs INT8 qui perd 3-8%) |
+| Fine-tuning | **30% dernières couches** | Évite le catastrophic forgetting avec peu de données |
+| Dataset | **PV-ALE Aug_Set** | 3 500+ images/classe vs 630 dans PlantVillage original |
+| Build | **GitHub Actions** | Pas besoin d'installer Flutter localement |
 
-1. Aller sur [colab.research.google.com](https://colab.research.google.com)
-2. Uploader `training/Apple_Disease_Colab.ipynb`
-3. `Runtime → Change runtime type → T4 GPU`
-4. Exécuter toutes les cellules dans l'ordre
-5. Télécharger `apple_disease_f16.tflite` + `class_names.json`
+---
 
-### 2. Copier le modèle dans Flutter
+## Entraînement (Kaggle)
 
-```
-flutter_app/assets/model/apple_disease_f16.tflite   ← coller ici
-flutter_app/assets/model/class_names.json            ← déjà présent
-```
+1. Ouvrir un notebook sur **kaggle.com**
+2. Ajouter le dataset : `akinyemijoseph/apple-leaf-disease-dataset-6-classes-v2`
+3. Activer **GPU T4 x2** + **Internet ON** dans Session options
+4. Coller et exécuter le code du notebook `training/Apple_Disease_Colab.ipynb`
+5. Télécharger `apple_disease_6class_f16.tflite` et `class_names.json`
+6. Renommer en `apple_disease_f16.tflite`
+7. Copier dans `flutter_app/assets/model/`
 
-Mettre à jour `pubspec.yaml` si le nom du fichier change :
-```yaml
-assets:
-  - assets/model/apple_disease_f16.tflite
-```
+**Durée totale :** ~90 minutes (Phase 1 : 30 min + Phase 2 : 60 min)
 
-### 3. Compiler l'APK Android
+---
 
+## Build APK via GitHub Actions
+
+1. Pousser le code sur GitHub :
 ```bash
-cd flutter_app
-flutter pub get
-flutter build apk --release
+git add .
+git commit -m "message"
+git push
 ```
-
-L'APK sera dans : `flutter_app/build/app/outputs/flutter-apk/app-release.apk`
-
-### 4. Installer sur le téléphone
-
-- Envoyer `app-release.apk` par WhatsApp ou USB
-- Sur Android : `Paramètres → Sécurité → Sources inconnues → Activer`
-- Ouvrir le fichier et installer
+2. GitHub → onglet **Actions** → le build démarre automatiquement
+3. Attendre ~5 minutes
+4. Télécharger `apple-disease-detector-apk` dans les artefacts
 
 ---
 
-## Classes détectées
+## Installation sur Android
 
-| Classe | Nom français | اسم بالعربية | ~Images |
-|--------|-------------|--------------|---------|
-| Apple___Apple_scab | Tavelure | جرب التفاح | 2 016 |
-| Apple___Black_rot | Pourriture noire | العفن الأسود | 1 180 |
-| Apple___Cedar_apple_rust | Rouille | صدأ التفاح | 275 |
-| Apple___healthy | Sain | صحي | 1 645 |
-
-> **Note Cedar Rust :** seulement 275 images → pondération ×4-6 appliquée automatiquement
-
----
-
-## Précision attendue
-
-- Phase 1 (tête seule) : ~88-92% val accuracy
-- Phase 2 (fine-tuning 30%) : ~93-96% val accuracy
-- Après conversion Float-16 : perte < 0.5%
-
-La Cedar Rust est la classe la plus difficile (peu de données). Si la précision
-sur cette classe est < 85%, augmenter son poids dans `class_weights` manuellement.
+1. Envoyer `app-release.apk` par WhatsApp ou USB
+2. `Paramètres → Sécurité → Sources inconnues → Activer`
+3. Ouvrir le fichier APK et installer
+4. L'app fonctionne **sans connexion internet**
