@@ -23,9 +23,10 @@ jobs:
           cache: true
 
       - name: Create Flutter project
-        run: flutter create --org com.apple.disease --project-name apple_disease_detector --platforms android app_build
+        run: |
+          flutter create --org com.apple.disease --project-name apple_disease_detector --platforms android app_build
 
-      - name: Copy our source files
+      - name: Copy source files and assets
         run: |
           cp -r flutter_app/lib/. app_build/lib/
           mkdir -p app_build/assets/model
@@ -33,64 +34,67 @@ jobs:
           cp flutter_app/assets/model/class_names.json app_build/assets/model/
           cp flutter_app/pubspec.yaml app_build/pubspec.yaml
 
-      - name: Patch build.gradle (minSdk + Java17 + noCompress tflite)
-        working-directory: app_build/android/app
+      - name: Patch Android config
+        working-directory: app_build/android
         run: |
-          if [ -f "build.gradle.kts" ]; then
-            FILE="build.gradle.kts"
-            # minSdk
+          # Fix JVM compatibility for tflite_flutter 0.12.x
+          echo "kotlin.jvm.target.validation.mode=WARNING" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx4G" >> gradle.properties
+
+          # Patch app/build.gradle.kts or build.gradle
+          if [ -f "app/build.gradle.kts" ]; then
+            FILE="app/build.gradle.kts"
             sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/' $FILE
-            sed -i 's/minSdkVersion = flutter.minSdkVersion/minSdkVersion = 24/' $FILE
-            # Java 17 (fix JVM incompatibility with tflite_flutter 0.12.x)
             sed -i 's/sourceCompatibility = JavaVersion.VERSION_1_8/sourceCompatibility = JavaVersion.VERSION_17/' $FILE
             sed -i 's/targetCompatibility = JavaVersion.VERSION_1_8/targetCompatibility = JavaVersion.VERSION_17/' $FILE
             sed -i 's/jvmTarget = "1.8"/jvmTarget = "17"/' $FILE
-            # aaptOptions
-            sed -i '/buildTypes {/i\    aaptOptions { noCompress("tflite") }\n' $FILE
+            sed -i '/buildTypes {/i\    aaptOptions { noCompress("tflite") }' $FILE
           else
-            FILE="build.gradle"
-            # minSdk
+            FILE="app/build.gradle"
             sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/' $FILE
             sed -i 's/minSdk flutter.minSdkVersion/minSdk 24/' $FILE
-            # Java 17
             sed -i 's/sourceCompatibility JavaVersion.VERSION_1_8/sourceCompatibility JavaVersion.VERSION_17/' $FILE
             sed -i 's/targetCompatibility JavaVersion.VERSION_1_8/targetCompatibility JavaVersion.VERSION_17/' $FILE
             sed -i "s/jvmTarget = '1.8'/jvmTarget = '17'/" $FILE
-            # aaptOptions
-            sed -i '/buildTypes {/i\    aaptOptions { noCompress "tflite" }\n' $FILE
+            sed -i '/buildTypes {/i\    aaptOptions { noCompress "tflite" }' $FILE
           fi
-          echo "=== $FILE ===" && cat $FILE
+          echo "=== Patched $FILE ===" && cat $FILE
+
+      - name: Get dependencies
+        working-directory: app_build
+        run: flutter pub get
+
+      - name: Patch tflite_flutter plugin JVM target
+        run: |
+          # Fix tflite_flutter plugin itself in pub cache
+          find ~/.pub-cache -path "*/tflite_flutter*/android/build.gradle" 2>/dev/null | while read f; do
+            echo "Patching: $f"
+            sed -i 's/sourceCompatibility JavaVersion.VERSION_11/sourceCompatibility JavaVersion.VERSION_17/' "$f" || true
+            sed -i 's/targetCompatibility JavaVersion.VERSION_11/targetCompatibility JavaVersion.VERSION_17/' "$f" || true
+            sed -i 's/sourceCompatibility JavaVersion.VERSION_1_8/sourceCompatibility JavaVersion.VERSION_17/' "$f" || true
+            sed -i 's/targetCompatibility JavaVersion.VERSION_1_8/targetCompatibility JavaVersion.VERSION_17/' "$f" || true
+            sed -i "s/jvmTarget = '1.8'/jvmTarget = '17'/" "$f" || true
+            sed -i 's/jvmTarget = "1.8"/jvmTarget = "17"/' "$f" || true
+          done
 
       - name: Build APK
         working-directory: app_build
         run: |
-          flutter pub get
-          # Fix JVM incompatibility between tflite_flutter (Kotlin 17) and Java tasks
-          echo "kotlin.jvm.target.validation.mode=WARNING" >> android/gradle.properties
-          # Force Java 17 for all subprojects (including plugins)
-          cat >> android/build.gradle << 'GRADLE_EOF'
-          subprojects {
-              afterEvaluate { proj ->
-                  if (proj.hasProperty("android")) {
-                      proj.android.compileOptions {
-                          sourceCompatibility JavaVersion.VERSION_17
-                          targetCompatibility JavaVersion.VERSION_17
-                      }
-                  }
-                  proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                      kotlinOptions { jvmTarget = "17" }
-                  }
-              }
-          }
-          GRADLE_EOF
-          flutter build apk --release
-          echo "=== APK trouve ==="
-          find build -name "*.apk" -type f
+          flutter build apk --release --no-tree-shake-icons || true
+          echo "=== Searching for APK ==="
+          find . -name "*.apk" -type f 2>/dev/null
 
-      - name: Copy APK to workspace root
+      - name: Locate and upload APK
         run: |
-          find app_build/build -name "*.apk" -type f -exec cp {} app-release.apk \;
-          ls -lh app-release.apk
+          APK=$(find app_build -name "*.apk" -type f 2>/dev/null | head -1)
+          if [ -n "$APK" ]; then
+            echo "APK found: $APK"
+            cp "$APK" app-release.apk
+            ls -lh app-release.apk
+          else
+            echo "No APK found - build failed"
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
