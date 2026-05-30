@@ -5,139 +5,67 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Flutter (stable)
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      - name: Check files present
-        run: |
-          echo "=== Contenu flutter_app/assets/model/ ==="
-          ls -lh flutter_app/assets/model/ || echo "Dossier manquant"
-          echo "=== Contenu flutter_app/lib/ ==="
-          ls flutter_app/lib/
-          echo "Flutter version:"
-          flutter --version
+      - name: Create Flutter project
+        run: flutter create --org com.apple.disease --project-name apple_disease_detector --platforms android app_build
 
-      - name: Create Flutter Android boilerplate
+      - name: Copy our source files
         run: |
-          flutter create \
-            --org com.apple.disease \
-            --project-name apple_disease_detector \
-            --platforms android \
-            app_build
-          echo "=== Flutter project created ==="
-          ls app_build/
-
-      - name: Inject source code and assets
-        run: |
-          echo "Copie du code source..."
-          rm -rf app_build/lib
-          cp -r flutter_app/lib app_build/lib
-
-          echo "Copie des assets..."
+          cp -r flutter_app/lib/. app_build/lib/
           mkdir -p app_build/assets/model
-          cp flutter_app/assets/model/class_names.json app_build/assets/model/
           cp flutter_app/assets/model/apple_disease_f16.tflite app_build/assets/model/
-
-          echo "Copie de pubspec.yaml..."
+          cp flutter_app/assets/model/class_names.json app_build/assets/model/
           cp flutter_app/pubspec.yaml app_build/pubspec.yaml
 
-          echo "=== Vérification assets ==="
-          ls -lh app_build/assets/model/
-
-      - name: Configure android/app/build.gradle
+      - name: Patch build.gradle (minSdk + noCompress tflite)
+        working-directory: app_build/android/app
         run: |
-          python3 - <<'EOF'
-          import os
+          # Detect Groovy or Kotlin DSL
+          if [ -f "build.gradle.kts" ]; then
+            FILE="build.gradle.kts"
+            sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/' $FILE
+            sed -i 's/minSdkVersion = flutter.minSdkVersion/minSdkVersion = 24/' $FILE
+            sed -i '/buildTypes {/i\    aaptOptions { noCompress("tflite") }\n' $FILE
+          else
+            FILE="build.gradle"
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/' $FILE
+            sed -i 's/minSdk flutter.minSdkVersion/minSdk 24/' $FILE
+            sed -i '/buildTypes {/i\    aaptOptions { noCompress "tflite" }\n' $FILE
+          fi
+          echo "=== $FILE ===" && cat $FILE
 
-          app_dir = 'app_build/android/app'
-          print("Fichiers dans android/app :", os.listdir(app_dir))
-
-          # Flutter récent utilise Kotlin DSL (.kts) au lieu de Groovy (.gradle)
-          kts_path    = f'{app_dir}/build.gradle.kts'
-          groovy_path = f'{app_dir}/build.gradle'
-
-          if os.path.exists(kts_path):
-              path   = kts_path
-              is_kts = True
-              print(f"Format détecté : Kotlin DSL → {path}")
-          elif os.path.exists(groovy_path):
-              path   = groovy_path
-              is_kts = False
-              print(f"Format détecté : Groovy DSL → {path}")
-          else:
-              raise FileNotFoundError(f"Aucun build.gradle trouvé dans {app_dir}")
-
-          content = open(path).read()
-          print("=== Contenu original ===")
-          print(content)
-
-          if is_kts:
-              # Kotlin DSL : minSdk = 24
-              for old in ['minSdk = flutter.minSdkVersion', 'minSdkVersion = flutter.minSdkVersion']:
-                  if old in content:
-                      content = content.replace(old, 'minSdk = 24')
-                      print(f"minSdk patché (KTS): {old}")
-                      break
-              # aaptOptions Kotlin DSL
-              aapt = '\n    aaptOptions {\n        noCompress("tflite")\n    }\n\n'
-          else:
-              # Groovy DSL : minSdkVersion 24
-              for old in ['minSdkVersion flutter.minSdkVersion', 'minSdk flutter.minSdkVersion']:
-                  if old in content:
-                      content = content.replace(old, 'minSdkVersion 24')
-                      print(f"minSdk patché (Groovy): {old}")
-                      break
-              # aaptOptions Groovy DSL
-              aapt = '\n    aaptOptions {\n        noCompress "tflite"\n    }\n\n'
-
-          # Injecter aaptOptions avant buildTypes
-          if 'buildTypes {' in content and 'aaptOptions' not in content:
-              content = content.replace('    buildTypes {', aapt + '    buildTypes {')
-              print("aaptOptions injecté")
-
-          open(path, 'w').write(content)
-          print("=== Contenu final ===")
-          print(content)
-          EOF
-
-      - name: Get Flutter dependencies
+      - name: Build APK
+        working-directory: app_build
         run: |
-          cd app_build
           flutter pub get
-
-      - name: Build release APK
-        run: |
-          cd app_build
           flutter build apk --release
-          echo "=== Recherche APK ==="
-          find . -name "*.apk" -type f 2>/dev/null
+          echo "=== APK trouvé ==="
+          find build -name "*.apk" -type f
+
+      - name: Copy APK to workspace root
+        run: |
+          find app_build/build -name "*.apk" -type f -exec cp {} app-release.apk \;
+          ls -lh app-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: apple-disease-detector-apk
-          path: |
-            app_build/build/app/outputs/flutter-apk/app-release.apk
-            app_build/build/app/outputs/apk/release/app-release.apk
-          if-no-files-found: warn
+          path: app-release.apk
           retention-days: 30
