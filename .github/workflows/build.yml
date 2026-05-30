@@ -33,19 +33,30 @@ jobs:
           cp flutter_app/assets/model/class_names.json app_build/assets/model/
           cp flutter_app/pubspec.yaml app_build/pubspec.yaml
 
-      - name: Patch build.gradle (minSdk + noCompress tflite)
+      - name: Patch build.gradle (minSdk + Java17 + noCompress tflite)
         working-directory: app_build/android/app
         run: |
-          # Detect Groovy or Kotlin DSL
           if [ -f "build.gradle.kts" ]; then
             FILE="build.gradle.kts"
+            # minSdk
             sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/' $FILE
             sed -i 's/minSdkVersion = flutter.minSdkVersion/minSdkVersion = 24/' $FILE
+            # Java 17 (fix JVM incompatibility with tflite_flutter 0.12.x)
+            sed -i 's/sourceCompatibility = JavaVersion.VERSION_1_8/sourceCompatibility = JavaVersion.VERSION_17/' $FILE
+            sed -i 's/targetCompatibility = JavaVersion.VERSION_1_8/targetCompatibility = JavaVersion.VERSION_17/' $FILE
+            sed -i 's/jvmTarget = "1.8"/jvmTarget = "17"/' $FILE
+            # aaptOptions
             sed -i '/buildTypes {/i\    aaptOptions { noCompress("tflite") }\n' $FILE
           else
             FILE="build.gradle"
+            # minSdk
             sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 24/' $FILE
             sed -i 's/minSdk flutter.minSdkVersion/minSdk 24/' $FILE
+            # Java 17
+            sed -i 's/sourceCompatibility JavaVersion.VERSION_1_8/sourceCompatibility JavaVersion.VERSION_17/' $FILE
+            sed -i 's/targetCompatibility JavaVersion.VERSION_1_8/targetCompatibility JavaVersion.VERSION_17/' $FILE
+            sed -i "s/jvmTarget = '1.8'/jvmTarget = '17'/" $FILE
+            # aaptOptions
             sed -i '/buildTypes {/i\    aaptOptions { noCompress "tflite" }\n' $FILE
           fi
           echo "=== $FILE ===" && cat $FILE
