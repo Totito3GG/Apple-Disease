@@ -32,15 +32,15 @@ const Map<String, DiseaseInfo> kDiseaseData = {
     nameFr: 'Tavelure du pommier',
     nameAr: 'جرب التفاح',
     emoji: '🍂',
-    descFr: 'Maladie fongique causée par Venturia inaequalis. '
-        'Très commune dans les régions humides.',
+    descFr: 'Maladie fongique causee par Venturia inaequalis. '
+        'Tres commune dans les regions humides.',
     descAr: 'مرض فطري ناجم عن فطر Venturia inaequalis. '
         'شائع جداً في المناطق الرطبة.',
     symptomesFr: [
-      'Taches olive à brunes sur les feuilles',
-      'Lésions liégeuses sur les fruits',
-      'Déformation et chute prématurée des fruits',
-      'Taches veloutées en début de saison',
+      'Taches olive a brunes sur les feuilles',
+      'Lesions liegeuses sur les fruits',
+      'Deformation et chute prematuree des fruits',
+      'Taches veloutees en debut de saison',
     ],
     symptomesAr: [
       'بقع زيتونية إلى بنية على الأوراق',
@@ -49,18 +49,18 @@ const Map<String, DiseaseInfo> kDiseaseData = {
       'بقع مخملية في بداية الموسم',
     ],
     traitementsFr: [
-      'Fongicide à base de captane ou de myclobutanil',
-      'Traitement préventif dès le gonflement des bourgeons',
-      'Ramasser et brûler les feuilles mortes en automne',
-      'Élaguer pour améliorer la circulation de l'air',
-      'Traitement curatif si détecté tôt (< 72h après infection)',
+      'Fongicide a base de captane ou de myclobutanil',
+      'Traitement preventif des le gonflement des bourgeons',
+      'Ramasser et bruler les feuilles mortes en automne',
+      "Elaguer pour ameliorer la circulation de l'air",
+      'Traitement curatif si detecte tot (moins de 72h apres infection)',
     ],
     traitementsAr: [
       'مبيد فطري على أساس الكابتان أو الميكلوبوتانيل',
       'علاج وقائي منذ تورم البراعم',
       'جمع وحرق الأوراق الميتة في الخريف',
       'التقليم لتحسين دوران الهواء',
-      'علاج علاجي إذا اكتُشف مبكراً (< 72 ساعة بعد الإصابة)',
+      'علاج علاجي إذا اكتُشف مبكراً (أقل من 72 ساعة بعد الإصابة)',
     ],
   ),
 
@@ -84,11 +84,11 @@ const Map<String, DiseaseInfo> kDiseaseData = {
       'نقاط سوداء صغيرة (بكنيديات) مرئية',
     ],
     traitementsFr: [
-      'Tailler et brûler les branches infectées immédiatement',
+      'Tailler et bruler les branches infectees immediatement',
       'Fongicide : captane, thirame ou myclobutanil',
-      'Appliquer de la pâte cicatrisante sur les coupes',
-      'Éviter les blessures lors de la taille (porte d'entrée)',
-      'Traiter pendant la floraison et après la chute des pétales',
+      'Appliquer de la pate cicatrisante sur les coupes',
+      "Eviter les blessures lors de la taille (porte d'entree)",
+      'Traiter pendant la floraison et apres la chute des petales',
     ],
     traitementsAr: [
       'تقليم وحرق الأغصان المصابة فوراً',
@@ -104,14 +104,14 @@ const Map<String, DiseaseInfo> kDiseaseData = {
     nameAr: 'صدأ التفاح',
     emoji: '🟠',
     descFr: 'Champignon Gymnosporangium juniperi-virginianae. '
-        'Nécessite deux hôtes : le pommier et le genévrier.',
+        'Necessite deux hotes : le pommier et le genevrier.',
     descAr: 'فطر Gymnosporangium juniperi-virginianae. '
         'يحتاج مضيفَين: شجرة التفاح والعرعر.',
     symptomesFr: [
       'Taches orange vif sur les feuilles (dessus)',
       'Tubes orange sous les feuilles (spores)',
-      'Lésions jaune-orange sur les fruits',
-      'Défoliation prématurée en cas d'attaque sévère',
+      'Lesions jaune-orange sur les fruits',
+      "Defoliation prematuree en cas d'attaque severe",
     ],
     symptomesAr: [
       'بقع برتقالية زاهية على الأوراق (الجانب العلوي)',
@@ -120,11 +120,11 @@ const Map<String, DiseaseInfo> kDiseaseData = {
       'تساقط مبكر للأوراق عند الإصابة الشديدة',
     ],
     traitementsFr: [
-      'Myclobutanil ou propiconazole dès l'apparition des taches',
-      'Traitement préventif au débourrement si historique de maladie',
-      'Éliminer les genévriers proches si possible (hôte alternatif)',
-      'Choisir des variétés résistantes pour les nouvelles plantations',
-      '3 à 4 traitements espacés de 7-10 jours au printemps',
+      "Myclobutanil ou propiconazole des l'apparition des taches",
+      'Traitement preventif au debourrement si historique de maladie',
+      'Eliminer les genevriers proches si possible (hote alternatif)',
+      'Choisir des varietes resistantes pour les nouvelles plantations',
+      '3 a 4 traitements espaces de 7-10 jours au printemps',
     ],
     traitementsAr: [
       'ميكلوبوتانيل أو بروبيكونازول عند ظهور البقع',
@@ -140,14 +140,14 @@ const Map<String, DiseaseInfo> kDiseaseData = {
     nameAr: 'تبقع الترناريا',
     emoji: '🟤',
     descFr: 'Champignon Alternaria mali. Provoque des taches brunes '
-        'sur les feuilles, surtout en période chaude et humide.',
+        'sur les feuilles, surtout en periode chaude et humide.',
     descAr: 'فطر Alternaria mali. يسبب بقعاً بنية على الأوراق، '
         'خاصة في الفترات الحارة والرطبة.',
     symptomesFr: [
-      'Taches circulaires brun foncé avec halo jaune',
-      'Centre des taches qui tombe (aspect troué)',
-      'Feuilles jaunissent et tombent prématurément',
-      'Attaque surtout les feuilles âgées',
+      'Taches circulaires brun fonce avec halo jaune',
+      'Centre des taches qui tombe (aspect troue)',
+      'Feuilles jaunissent et tombent prematurement',
+      'Attaque surtout les feuilles agees',
     ],
     symptomesAr: [
       'بقع دائرية بنية داكنة مع هالة صفراء',
@@ -156,11 +156,11 @@ const Map<String, DiseaseInfo> kDiseaseData = {
       'تصيب أساساً الأوراق العجوز',
     ],
     traitementsFr: [
-      'Fongicide à base de mancozèbe ou de captane',
-      'Traitement dès l'apparition des premières taches',
-      'Ramasser et détruire les feuilles tombées',
-      'Éviter l'irrigation par aspersion (favorise le champignon)',
-      'Bonne ventilation par taille régulière',
+      'Fongicide a base de mancozebbe ou de captane',
+      "Traitement des l'apparition des premieres taches",
+      'Ramasser et detruire les feuilles tombees',
+      "Eviter l'irrigation par aspersion (favorise le champignon)",
+      'Bonne ventilation par taille reguliere',
     ],
     traitementsAr: [
       'مبيد فطري على أساس المانكوزيب أو الكابتان',
@@ -172,18 +172,18 @@ const Map<String, DiseaseInfo> kDiseaseData = {
   ),
 
   'Powdery_Mildew': DiseaseInfo(
-    nameFr: 'Oïdium du pommier',
+    nameFr: 'Oidium du pommier',
     nameAr: 'البياض الدقيقي',
     emoji: '⬜',
     descFr: 'Champignon Podosphaera leucotricha. Forme un feutrage '
-        'blanc caractéristique sur les feuilles et les jeunes pousses.',
+        'blanc caracteristique sur les feuilles et les jeunes pousses.',
     descAr: 'فطر Podosphaera leucotricha. يكوّن طبقة بيضاء مميزة '
         'على الأوراق والبراعم الصغيرة.',
     symptomesFr: [
       'Poudre blanche farineuse sur les feuilles',
-      'Feuilles enroulées et déformées',
+      'Feuilles enroulees et deformees',
       'Jeunes pousses couvertes de blanc',
-      'Fruits avec taches liégeuses rugueuses',
+      'Fruits avec taches liegeuses rugueuses',
       'Croissance ralentie des rameaux atteints',
     ],
     symptomesAr: [
@@ -194,11 +194,11 @@ const Map<String, DiseaseInfo> kDiseaseData = {
       'تباطؤ نمو الأفرع المصابة',
     ],
     traitementsFr: [
-      'Soufre mouillable en préventif dès le débourrement',
-      'Myclobutanil ou tébuconazole en curatif',
-      'Tailler et brûler les rameaux atteints en hiver',
-      'Éviter les excès d'azote (favorise les pousses tendres)',
-      'Traiter toutes les 10-14 jours en période à risque',
+      'Soufre mouillable en preventif des le debourrement',
+      'Myclobutanil ou tebuconazole en curatif',
+      'Tailler et bruler les rameaux atteints en hiver',
+      "Eviter les exces d'azote (favorise les pousses tendres)",
+      'Traiter toutes les 10-14 jours en periode a risque',
     ],
     traitementsAr: [
       'الكبريت القابل للبلل وقائياً منذ بداية تفتح البراعم',
@@ -213,14 +213,14 @@ const Map<String, DiseaseInfo> kDiseaseData = {
     nameFr: 'Pommier sain',
     nameAr: 'شجرة تفاح صحية',
     emoji: '✅',
-    descFr: 'Aucune maladie détectée. L'arbre semble en bonne santé.',
+    descFr: "Aucune maladie detectee. L'arbre semble en bonne sante.",
     descAr: 'لم يُكتشف أي مرض. تبدو الشجرة بصحة جيدة.',
     symptomesFr: ['Feuilles vertes et uniformes', 'Pas de taches visibles'],
     symptomesAr: ['أوراق خضراء ومتجانسة', 'لا توجد بقع مرئية'],
     traitementsFr: [
-      'Continuer à surveiller régulièrement',
-      'Arrosage adapté et taille annuelle',
-      'Traitement préventif en début de saison si zone à risque',
+      'Continuer a surveiller regulierement',
+      'Arrosage adapte et taille annuelle',
+      'Traitement preventif en debut de saison si zone a risque',
     ],
     traitementsAr: [
       'الاستمرار في المراقبة المنتظمة',
@@ -234,14 +234,14 @@ const Map<String, DiseaseInfo> kDiseaseData = {
     nameFr: 'Pommier sain',
     nameAr: 'شجرة تفاح صحية',
     emoji: '✅',
-    descFr: 'Aucune maladie détectée. L'arbre semble en bonne santé.',
+    descFr: "Aucune maladie detectee. L'arbre semble en bonne sante.",
     descAr: 'لم يُكتشف أي مرض. تبدو الشجرة بصحة جيدة.',
     symptomesFr: ['Feuilles vertes et uniformes', 'Pas de taches visibles'],
     symptomesAr: ['أوراق خضراء ومتجانسة', 'لا توجد بقع مرئية'],
     traitementsFr: [
-      'Continuer à surveiller régulièrement',
-      'Arrosage adapté et taille annuelle',
-      'Traitement préventif en début de saison si zone à risque',
+      'Continuer a surveiller regulierement',
+      'Arrosage adapte et taille annuelle',
+      'Traitement preventif en debut de saison si zone a risque',
     ],
     traitementsAr: [
       'الاستمرار في المراقبة المنتظمة',

@@ -142,8 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            _t('L'analyse est locale — aucune connexion internet requise',
-               'التحليل محلي — لا يتطلب اتصالاً بالإنترنت'),
+            _t("L'analyse est locale - aucune connexion internet requise",
+               'التحليل محلي - لا يتطلب اتصالاً بالإنترنت'),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: cs.outline),
           ),

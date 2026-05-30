@@ -12,7 +12,7 @@ class ClassifierResult {
 }
 
 class AppleClassifier {
-  static const int _inputSize = 380; // EfficientNet-B4 : 380×380
+  static const int _inputSize = 380;
   static const String _modelPath = 'assets/model/apple_disease_f16.tflite';
   static const String _labelsPath = 'assets/model/class_names.json';
 
@@ -22,40 +22,46 @@ class AppleClassifier {
 
   Future<void> load() async {
     _interpreter = await Interpreter.fromAsset(_modelPath);
-
     final raw = await rootBundle.loadString(_labelsPath);
     _labels = List<String>.from(jsonDecode(raw));
   }
 
   Future<ClassifierResult> classify(File imageFile) async {
-    assert(isLoaded, 'Classifier not loaded — call load() first');
+    assert(isLoaded, 'Classifier not loaded');
 
     final rawBytes = await imageFile.readAsBytes();
     img.Image? decoded = img.decodeImage(rawBytes);
     if (decoded == null) throw Exception('Image illisible');
 
-    // Resize à 380×380
     final resized = img.copyResize(decoded, width: _inputSize, height: _inputSize);
+    final inputData = _imageToFloat32List(resized);
 
-    // Normalisation [0, 255] — EfficientNetB4 normalise en interne via Rescaling
-    final input = _imageToFloat32List(resized);
+    // Input shape: [1, 380, 380, 3]
+    final input = inputData.reshape([1, _inputSize, _inputSize, 3]);
 
-    // Sortie : [1, numClasses]
-    final outputShape = _interpreter!.getOutputTensor(0).shape;
-    final output = List.filled(outputShape[1], 0.0).reshape([1, outputShape[1]]);
+    // Output shape: [1, numClasses]
+    final numClasses = _labels.length;
+    final outputData = Float32List(numClasses);
+    final output = outputData.reshape([1, numClasses]);
 
     _interpreter!.run(input, output);
 
-    final probs = List<double>.from(output[0] as List);
-    final maxIdx = probs.indexWhere((p) => p == probs.reduce((a, b) => a > b ? a : b));
+    final probs = List<double>.from(outputData);
+    double maxVal = probs[0];
+    int maxIdx = 0;
+    for (int i = 1; i < probs.length; i++) {
+      if (probs[i] > maxVal) {
+        maxVal = probs[i];
+        maxIdx = i;
+      }
+    }
 
     return ClassifierResult(
       className: _labels[maxIdx],
-      confidence: probs[maxIdx],
+      confidence: maxVal,
     );
   }
 
-  // Convertit l'image en Float32List [1, 380, 380, 3]
   Float32List _imageToFloat32List(img.Image image) {
     final buffer = Float32List(_inputSize * _inputSize * 3);
     int idx = 0;
