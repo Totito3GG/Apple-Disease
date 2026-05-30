@@ -1,0 +1,27 @@
+name: apple_disease_detector
+description: Détection de maladies du pommier — 100% hors-ligne
+version: 1.0.0+1
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  tflite_flutter: ^0.10.4
+  image_picker: ^1.0.7
+  image: ^4.1.7
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/model/apple_disease_f16.tflite
+    - assets/model/class_names.json

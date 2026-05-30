@@ -1,0 +1,83 @@
+name: Build Apple Disease APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Create Flutter Android boilerplate
+        run: |
+          flutter create \
+            --org com.apple.disease \
+            --project-name apple_disease_detector \
+            --platforms android \
+            app_build
+
+      - name: Inject source code and assets
+        run: |
+          rm -rf app_build/lib
+          cp -r flutter_app/lib app_build/lib
+
+          mkdir -p app_build/assets/model
+          cp flutter_app/assets/model/class_names.json app_build/assets/model/
+          cp flutter_app/assets/model/apple_disease_f16.tflite app_build/assets/model/
+
+          cp flutter_app/pubspec.yaml app_build/pubspec.yaml
+
+      - name: Configure android/app/build.gradle
+        run: |
+          python3 - <<'EOF'
+          path = 'app_build/android/app/build.gradle'
+          content = open(path).read()
+
+          # minSdk 24 requis par tflite_flutter
+          content = content.replace(
+              'minSdkVersion flutter.minSdkVersion',
+              'minSdkVersion 24'
+          )
+
+          # aaptOptions : ne pas compresser le .tflite
+          content = content.replace(
+              '    buildTypes {',
+              '    aaptOptions {\n        noCompress "tflite"\n    }\n\n    buildTypes {'
+          )
+
+          open(path, 'w').write(content)
+          print("build.gradle OK")
+          print(content)
+          EOF
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+        working-directory: app_build
+
+      - name: Build release APK
+        run: flutter build apk --release
+        working-directory: app_build
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apple-disease-detector-apk
+          path: app_build/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
