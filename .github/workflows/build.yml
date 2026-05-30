@@ -65,8 +65,26 @@ jobs:
         working-directory: app_build
         run: |
           flutter pub get
+          # Fix JVM incompatibility between tflite_flutter (Kotlin 17) and Java tasks
+          echo "kotlin.jvm.target.validation.mode=WARNING" >> android/gradle.properties
+          # Force Java 17 for all subprojects (including plugins)
+          cat >> android/build.gradle << 'GRADLE_EOF'
+          subprojects {
+              afterEvaluate { proj ->
+                  if (proj.hasProperty("android")) {
+                      proj.android.compileOptions {
+                          sourceCompatibility JavaVersion.VERSION_17
+                          targetCompatibility JavaVersion.VERSION_17
+                      }
+                  }
+                  proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                      kotlinOptions { jvmTarget = "17" }
+                  }
+              }
+          }
+          GRADLE_EOF
           flutter build apk --release
-          echo "=== APK trouvé ==="
+          echo "=== APK trouve ==="
           find build -name "*.apk" -type f
 
       - name: Copy APK to workspace root
