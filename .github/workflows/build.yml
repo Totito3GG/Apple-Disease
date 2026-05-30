@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,6 +28,15 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Check files present
+        run: |
+          echo "=== Contenu flutter_app/assets/model/ ==="
+          ls -lh flutter_app/assets/model/ || echo "Dossier manquant"
+          echo "=== Contenu flutter_app/lib/ ==="
+          ls flutter_app/lib/
+          echo "Flutter version:"
+          flutter --version
+
       - name: Create Flutter Android boilerplate
         run: |
           flutter create \
@@ -32,48 +44,70 @@ jobs:
             --project-name apple_disease_detector \
             --platforms android \
             app_build
+          echo "=== Flutter project created ==="
+          ls app_build/
 
       - name: Inject source code and assets
         run: |
+          echo "Copie du code source..."
           rm -rf app_build/lib
           cp -r flutter_app/lib app_build/lib
 
+          echo "Copie des assets..."
           mkdir -p app_build/assets/model
           cp flutter_app/assets/model/class_names.json app_build/assets/model/
           cp flutter_app/assets/model/apple_disease_f16.tflite app_build/assets/model/
 
+          echo "Copie de pubspec.yaml..."
           cp flutter_app/pubspec.yaml app_build/pubspec.yaml
+
+          echo "=== Vérification assets ==="
+          ls -lh app_build/assets/model/
 
       - name: Configure android/app/build.gradle
         run: |
           python3 - <<'EOF'
           path = 'app_build/android/app/build.gradle'
           content = open(path).read()
+          print("=== build.gradle original ===")
+          print(content)
 
           # minSdk 24 requis par tflite_flutter
-          content = content.replace(
-              'minSdkVersion flutter.minSdkVersion',
-              'minSdkVersion 24'
-          )
+          if 'minSdkVersion flutter.minSdkVersion' in content:
+              content = content.replace(
+                  'minSdkVersion flutter.minSdkVersion',
+                  'minSdkVersion 24'
+              )
+              print("minSdk patché")
+          elif 'minSdk flutter.minSdkVersion' in content:
+              content = content.replace(
+                  'minSdk flutter.minSdkVersion',
+                  'minSdk 24'
+              )
+              print("minSdk patché (format nouveau)")
 
-          # aaptOptions : ne pas compresser le .tflite
-          content = content.replace(
-              '    buildTypes {',
-              '    aaptOptions {\n        noCompress "tflite"\n    }\n\n    buildTypes {'
-          )
+          # aaptOptions pour ne pas compresser le .tflite
+          if 'buildTypes {' in content:
+              content = content.replace(
+                  '    buildTypes {',
+                  '    aaptOptions {\n        noCompress "tflite"\n    }\n\n    buildTypes {'
+              )
+              print("aaptOptions patché")
 
           open(path, 'w').write(content)
-          print("build.gradle OK")
+          print("=== build.gradle final ===")
           print(content)
           EOF
 
       - name: Get Flutter dependencies
-        run: flutter pub get
-        working-directory: app_build
+        run: |
+          cd app_build
+          flutter pub get
 
       - name: Build release APK
-        run: flutter build apk --release
-        working-directory: app_build
+        run: |
+          cd app_build
+          flutter build apk --release --verbose 2>&1 | tail -50
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
