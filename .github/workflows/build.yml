@@ -67,35 +67,56 @@ jobs:
       - name: Configure android/app/build.gradle
         run: |
           python3 - <<'EOF'
-          path = 'app_build/android/app/build.gradle'
+          import os
+
+          app_dir = 'app_build/android/app'
+          print("Fichiers dans android/app :", os.listdir(app_dir))
+
+          # Flutter récent utilise Kotlin DSL (.kts) au lieu de Groovy (.gradle)
+          kts_path    = f'{app_dir}/build.gradle.kts'
+          groovy_path = f'{app_dir}/build.gradle'
+
+          if os.path.exists(kts_path):
+              path   = kts_path
+              is_kts = True
+              print(f"Format détecté : Kotlin DSL → {path}")
+          elif os.path.exists(groovy_path):
+              path   = groovy_path
+              is_kts = False
+              print(f"Format détecté : Groovy DSL → {path}")
+          else:
+              raise FileNotFoundError(f"Aucun build.gradle trouvé dans {app_dir}")
+
           content = open(path).read()
-          print("=== build.gradle original ===")
+          print("=== Contenu original ===")
           print(content)
 
-          # minSdk 24 requis par tflite_flutter
-          if 'minSdkVersion flutter.minSdkVersion' in content:
-              content = content.replace(
-                  'minSdkVersion flutter.minSdkVersion',
-                  'minSdkVersion 24'
-              )
-              print("minSdk patché")
-          elif 'minSdk flutter.minSdkVersion' in content:
-              content = content.replace(
-                  'minSdk flutter.minSdkVersion',
-                  'minSdk 24'
-              )
-              print("minSdk patché (format nouveau)")
+          if is_kts:
+              # Kotlin DSL : minSdk = 24
+              for old in ['minSdk = flutter.minSdkVersion', 'minSdkVersion = flutter.minSdkVersion']:
+                  if old in content:
+                      content = content.replace(old, 'minSdk = 24')
+                      print(f"minSdk patché (KTS): {old}")
+                      break
+              # aaptOptions Kotlin DSL
+              aapt = '\n    aaptOptions {\n        noCompress("tflite")\n    }\n\n'
+          else:
+              # Groovy DSL : minSdkVersion 24
+              for old in ['minSdkVersion flutter.minSdkVersion', 'minSdk flutter.minSdkVersion']:
+                  if old in content:
+                      content = content.replace(old, 'minSdkVersion 24')
+                      print(f"minSdk patché (Groovy): {old}")
+                      break
+              # aaptOptions Groovy DSL
+              aapt = '\n    aaptOptions {\n        noCompress "tflite"\n    }\n\n'
 
-          # aaptOptions pour ne pas compresser le .tflite
-          if 'buildTypes {' in content:
-              content = content.replace(
-                  '    buildTypes {',
-                  '    aaptOptions {\n        noCompress "tflite"\n    }\n\n    buildTypes {'
-              )
-              print("aaptOptions patché")
+          # Injecter aaptOptions avant buildTypes
+          if 'buildTypes {' in content and 'aaptOptions' not in content:
+              content = content.replace('    buildTypes {', aapt + '    buildTypes {')
+              print("aaptOptions injecté")
 
           open(path, 'w').write(content)
-          print("=== build.gradle final ===")
+          print("=== Contenu final ===")
           print(content)
           EOF
 
