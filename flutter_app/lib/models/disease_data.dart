@@ -1,4 +1,4 @@
-// Données complètes des 4 maladies — français + arabe
+// Données complètes des 6 maladies — français + arabe
 // Clés = noms exacts retournés par class_names.json
 
 class DiseaseInfo {
@@ -28,7 +28,7 @@ class DiseaseInfo {
 }
 
 const Map<String, DiseaseInfo> kDiseaseData = {
-  'Apple___Apple_scab': DiseaseInfo(
+  'Apple_scab': DiseaseInfo(
     nameFr: 'Tavelure du pommier',
     nameAr: 'جرب التفاح',
     emoji: '🍂',
@@ -64,7 +64,7 @@ const Map<String, DiseaseInfo> kDiseaseData = {
     ],
   ),
 
-  'Apple___Black_rot': DiseaseInfo(
+  'Black_rot': DiseaseInfo(
     nameFr: 'Pourriture noire',
     nameAr: 'العفن الأسود',
     emoji: '⚫',
@@ -99,7 +99,7 @@ const Map<String, DiseaseInfo> kDiseaseData = {
     ],
   ),
 
-  'Apple___Cedar_apple_rust': DiseaseInfo(
+  'Cedar_apple_rust': DiseaseInfo(
     nameFr: 'Rouille du pommier',
     nameAr: 'صدأ التفاح',
     emoji: '🟠',
@@ -133,6 +133,101 @@ const Map<String, DiseaseInfo> kDiseaseData = {
       'اختيار أصناف مقاومة للزراعات الجديدة',
       '3-4 علاجات بفاصل 7-10 أيام في الربيع',
     ],
+  ),
+
+  'Altenaria_Leaf_Spot': DiseaseInfo(
+    nameFr: 'Tache alternaria',
+    nameAr: 'تبقع الترناريا',
+    emoji: '🟤',
+    descFr: 'Champignon Alternaria mali. Provoque des taches brunes '
+        'sur les feuilles, surtout en période chaude et humide.',
+    descAr: 'فطر Alternaria mali. يسبب بقعاً بنية على الأوراق، '
+        'خاصة في الفترات الحارة والرطبة.',
+    symptomesFr: [
+      'Taches circulaires brun foncé avec halo jaune',
+      'Centre des taches qui tombe (aspect troué)',
+      'Feuilles jaunissent et tombent prématurément',
+      'Attaque surtout les feuilles âgées',
+    ],
+    symptomesAr: [
+      'بقع دائرية بنية داكنة مع هالة صفراء',
+      'مركز البقع يسقط (مظهر مثقوب)',
+      'اصفرار وسقوط مبكر للأوراق',
+      'تصيب أساساً الأوراق العجوز',
+    ],
+    traitementsFr: [
+      'Fongicide à base de mancozèbe ou de captane',
+      'Traitement dès l'apparition des premières taches',
+      'Ramasser et détruire les feuilles tombées',
+      'Éviter l'irrigation par aspersion (favorise le champignon)',
+      'Bonne ventilation par taille régulière',
+    ],
+    traitementsAr: [
+      'مبيد فطري على أساس المانكوزيب أو الكابتان',
+      'العلاج فور ظهور أولى البقع',
+      'جمع وإتلاف الأوراق المتساقطة',
+      'تجنب الري بالرش (يشجع الفطر)',
+      'تهوية جيدة عن طريق التقليم المنتظم',
+    ],
+  ),
+
+  'Powdery_Mildew': DiseaseInfo(
+    nameFr: 'Oïdium du pommier',
+    nameAr: 'البياض الدقيقي',
+    emoji: '⬜',
+    descFr: 'Champignon Podosphaera leucotricha. Forme un feutrage '
+        'blanc caractéristique sur les feuilles et les jeunes pousses.',
+    descAr: 'فطر Podosphaera leucotricha. يكوّن طبقة بيضاء مميزة '
+        'على الأوراق والبراعم الصغيرة.',
+    symptomesFr: [
+      'Poudre blanche farineuse sur les feuilles',
+      'Feuilles enroulées et déformées',
+      'Jeunes pousses couvertes de blanc',
+      'Fruits avec taches liégeuses rugueuses',
+      'Croissance ralentie des rameaux atteints',
+    ],
+    symptomesAr: [
+      'مسحوق أبيض دقيقي على الأوراق',
+      'تجعد وتشوه الأوراق',
+      'البراعم الصغيرة مغطاة بالأبيض',
+      'بقع فلينية خشنة على الثمار',
+      'تباطؤ نمو الأفرع المصابة',
+    ],
+    traitementsFr: [
+      'Soufre mouillable en préventif dès le débourrement',
+      'Myclobutanil ou tébuconazole en curatif',
+      'Tailler et brûler les rameaux atteints en hiver',
+      'Éviter les excès d'azote (favorise les pousses tendres)',
+      'Traiter toutes les 10-14 jours en période à risque',
+    ],
+    traitementsAr: [
+      'الكبريت القابل للبلل وقائياً منذ بداية تفتح البراعم',
+      'ميكلوبوتانيل أو تيبوكونازول علاجياً',
+      'تقليم وحرق الأفرع المصابة في الشتاء',
+      'تجنب الإفراط في الآزوت (يشجع النمو الطري)',
+      'العلاج كل 10-14 يوماً في فترة الخطر',
+    ],
+  ),
+
+  'Healthy': DiseaseInfo(
+    nameFr: 'Pommier sain',
+    nameAr: 'شجرة تفاح صحية',
+    emoji: '✅',
+    descFr: 'Aucune maladie détectée. L'arbre semble en bonne santé.',
+    descAr: 'لم يُكتشف أي مرض. تبدو الشجرة بصحة جيدة.',
+    symptomesFr: ['Feuilles vertes et uniformes', 'Pas de taches visibles'],
+    symptomesAr: ['أوراق خضراء ومتجانسة', 'لا توجد بقع مرئية'],
+    traitementsFr: [
+      'Continuer à surveiller régulièrement',
+      'Arrosage adapté et taille annuelle',
+      'Traitement préventif en début de saison si zone à risque',
+    ],
+    traitementsAr: [
+      'الاستمرار في المراقبة المنتظمة',
+      'ري مناسب وتقليم سنوي',
+      'علاج وقائي في بداية الموسم إذا كانت المنطقة عرضة للخطر',
+    ],
+    isHealthy: true,
   ),
 
   'Apple___healthy': DiseaseInfo(
