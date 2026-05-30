@@ -34,21 +34,21 @@ class AppleClassifier {
     if (decoded == null) throw Exception('Image illisible');
 
     final resized = img.copyResize(decoded, width: _inputSize, height: _inputSize);
-    final inputData = _imageToFloat32List(resized);
 
-    // Input shape: [1, 380, 380, 3]
-    final input = inputData.reshape([1, _inputSize, _inputSize, 3]);
+    // Input: [1, 380, 380, 3] as nested List (tflite_flutter reads from the list directly)
+    final input = [_buildInputTensor(resized)];
 
-    // Output shape: [1, numClasses]
-    final numClasses = _labels.length;
-    final outputData = Float32List(numClasses);
-    final output = outputData.reshape([1, numClasses]);
+    // Output: [1, numClasses] — use List<List<double>> so the interpreter fills it in place
+    final int numClasses = _labels.length;
+    final List<List<double>> output = [List<double>.filled(numClasses, 0.0)];
 
     _interpreter!.run(input, output);
 
-    final probs = List<double>.from(outputData);
-    double maxVal = probs[0];
+    // output[0] is now populated with probabilities
+    final probs = output[0];
+
     int maxIdx = 0;
+    double maxVal = probs[0];
     for (int i = 1; i < probs.length; i++) {
       if (probs[i] > maxVal) {
         maxVal = probs[i];
@@ -56,24 +56,17 @@ class AppleClassifier {
       }
     }
 
-    return ClassifierResult(
-      className: _labels[maxIdx],
-      confidence: maxVal,
-    );
+    return ClassifierResult(className: _labels[maxIdx], confidence: maxVal);
   }
 
-  Float32List _imageToFloat32List(img.Image image) {
-    final buffer = Float32List(_inputSize * _inputSize * 3);
-    int idx = 0;
-    for (int y = 0; y < _inputSize; y++) {
-      for (int x = 0; x < _inputSize; x++) {
+  // Build [380][380][3] nested list — values in [0, 255] as EfficientNet expects
+  List _buildInputTensor(img.Image image) {
+    return List.generate(_inputSize, (y) =>
+      List.generate(_inputSize, (x) {
         final pixel = image.getPixel(x, y);
-        buffer[idx++] = pixel.r.toDouble();
-        buffer[idx++] = pixel.g.toDouble();
-        buffer[idx++] = pixel.b.toDouble();
-      }
-    }
-    return buffer;
+        return [pixel.r.toDouble(), pixel.g.toDouble(), pixel.b.toDouble()];
+      })
+    );
   }
 
   void dispose() {
